@@ -11,6 +11,7 @@ import ordersRoutes from './routes/orders.routes';
 import orderItemsRoutes from './routes/orderItems.routes';
 import paymentsRoutes from './routes/payments.routes';
 import uploadRoutes from './routes/upload.routes';
+import authRoutes from './routes/auth.routes';
 
 dotenv.config();
 
@@ -41,6 +42,7 @@ app.get('/', (_req, res) => {
 });
 
 // Routes
+app.use('/api/auth', authRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/tables', tablesRoutes);
 app.use('/api/categories', categoriesRoutes);
