@@ -92,3 +92,68 @@ export const getOrderById = async (req: Request, res: Response): Promise<void> =
   }
   res.json({ success: true, data });
 };
+
+// POST /api/orders
+export const createOrder = async (req: Request, res: Response): Promise<void> => {
+  const { table_id, user_id, total_amount, status } = req.body;
+
+  const { data, error } = await supabase
+    .from('orders')
+    .insert([{
+      table_id,
+      user_id,
+      total_amount: total_amount || 0.00,
+      status: status || 'pending'
+    }])
+    .select()
+    .single();
+
+  if (error) {
+    res.status(500).json({ success: false, message: error.message });
+    return;
+  }
+
+  res.status(201).json({ success: true, data });
+};
+
+// PUT /api/orders/:id
+export const updateOrder = async (req: Request, res: Response): Promise<void> => {
+  const { id } = req.params;
+  const { table_id, user_id, total_amount, status } = req.body;
+
+  const { data, error } = await supabase
+    .from('orders')
+    .update({ table_id, user_id, total_amount, status })
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) {
+    res.status(500).json({ success: false, message: error.message });
+    return;
+  }
+
+  if (!data) {
+    res.status(404).json({ success: false, message: 'Order not found' });
+    return;
+  }
+
+  res.json({ success: true, data });
+};
+
+// DELETE /api/orders/:id
+export const deleteOrder = async (req: Request, res: Response): Promise<void> => {
+  const { id } = req.params;
+
+  const { error } = await supabase
+    .from('orders')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    res.status(500).json({ success: false, message: error.message });
+    return;
+  }
+
+  res.json({ success: true, message: 'Order deleted successfully' });
+};

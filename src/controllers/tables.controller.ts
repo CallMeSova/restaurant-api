@@ -46,3 +46,68 @@ export const getTablesByStatus = async (req: Request, res: Response): Promise<vo
   }
   res.json({ success: true, data });
 };
+
+// POST /api/tables
+export const createTable = async (req: Request, res: Response): Promise<void> => {
+  const { table_number, capacity, status } = req.body;
+
+  if (!table_number || capacity === undefined) {
+    res.status(400).json({ success: false, message: 'Table number and capacity are required' });
+    return;
+  }
+
+  const { data, error } = await supabase
+    .from('tables')
+    .insert([{ table_number, capacity, status: status || 'available' }])
+    .select()
+    .single();
+
+  if (error) {
+    res.status(500).json({ success: false, message: error.message });
+    return;
+  }
+
+  res.status(201).json({ success: true, data });
+};
+
+// PUT /api/tables/:id
+export const updateTable = async (req: Request, res: Response): Promise<void> => {
+  const { id } = req.params;
+  const { table_number, capacity, status } = req.body;
+
+  const { data, error } = await supabase
+    .from('tables')
+    .update({ table_number, capacity, status })
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) {
+    res.status(500).json({ success: false, message: error.message });
+    return;
+  }
+
+  if (!data) {
+    res.status(404).json({ success: false, message: 'Table not found' });
+    return;
+  }
+
+  res.json({ success: true, data });
+};
+
+// DELETE /api/tables/:id
+export const deleteTable = async (req: Request, res: Response): Promise<void> => {
+  const { id } = req.params;
+
+  const { error } = await supabase
+    .from('tables')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    res.status(500).json({ success: false, message: error.message });
+    return;
+  }
+
+  res.json({ success: true, message: 'Table deleted successfully' });
+};

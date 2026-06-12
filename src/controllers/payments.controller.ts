@@ -70,3 +70,57 @@ export const getPaymentById = async (req: Request, res: Response): Promise<void>
   }
   res.json({ success: true, data });
 };
+
+// POST /api/payments
+export const createPayment = async (req: Request, res: Response): Promise<void> => {
+  const { order_id, amount, payment_method, status, paid_at } = req.body;
+
+  if (!order_id || amount === undefined || !payment_method) {
+    res.status(400).json({ success: false, message: 'Order ID, amount, and payment method are required' });
+    return;
+  }
+
+  const { data, error } = await supabase
+    .from('payments')
+    .insert([{
+      order_id,
+      amount,
+      payment_method,
+      status: status || 'pending',
+      paid_at: paid_at || new Date().toISOString()
+    }])
+    .select()
+    .single();
+
+  if (error) {
+    res.status(500).json({ success: false, message: error.message });
+    return;
+  }
+
+  res.status(201).json({ success: true, data });
+};
+
+// PUT /api/payments/:id
+export const updatePayment = async (req: Request, res: Response): Promise<void> => {
+  const { id } = req.params;
+  const { order_id, amount, payment_method, status, paid_at } = req.body;
+
+  const { data, error } = await supabase
+    .from('payments')
+    .update({ order_id, amount, payment_method, status, paid_at })
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) {
+    res.status(500).json({ success: false, message: error.message });
+    return;
+  }
+
+  if (!data) {
+    res.status(404).json({ success: false, message: 'Payment not found' });
+    return;
+  }
+
+  res.json({ success: true, data });
+};

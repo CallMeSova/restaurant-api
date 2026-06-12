@@ -58,6 +58,15 @@ app.use((_req, res) => {
   res.status(404).json({ success: false, message: 'Route not found' });
 });
 
+// Global error handler
+app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  console.error('💥 Global error handler caught:', err);
+  res.status(err.status || 500).json({
+    success: false,
+    message: err.message || 'Internal Server Error',
+  });
+});
+
 // รัน local server เฉพาะตอน dev (Vercel จัดการ server เอง)
 if (process.env.VERCEL !== '1') {
   app.listen(PORT, () => {
