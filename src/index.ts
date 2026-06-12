@@ -56,8 +56,11 @@ app.use((_req, res) => {
   res.status(404).json({ success: false, message: 'Route not found' });
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 Restaurant API running on http://localhost:${PORT}`);
-});
+// รัน local server เฉพาะตอน dev (Vercel จัดการ server เอง)
+if (process.env.VERCEL !== '1') {
+  app.listen(PORT, () => {
+    console.log(`🚀 Restaurant API running on http://localhost:${PORT}`);
+  });
+}
 
 export default app;
