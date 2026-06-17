@@ -4,7 +4,8 @@ import jwt from 'jsonwebtoken';
 const getJwtSecret = (): string => {
   const secret = process.env.JWT_SECRET;
   if (!secret) {
-    throw new Error('JWT_SECRET is missing in environment variables');
+    console.warn('⚠️ Warning: JWT_SECRET is missing in environment variables. Using fallback secret.');
+    return 'restaurant_api_default_secret_key_fallback_12345';
   }
   return secret;
 };
