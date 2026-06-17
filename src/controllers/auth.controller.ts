@@ -3,11 +3,13 @@ import { supabase } from '../config/supabase';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET;
-
-if (!JWT_SECRET) {
-  throw new Error('JWT_SECRET is missing in environment variables');
-}
+const getJwtSecret = (): string => {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error('JWT_SECRET is missing in environment variables');
+  }
+  return secret;
+};
 
 export const login = async (req: Request, res: Response): Promise<void> => {
   const { username, password } = req.body || {};
@@ -45,7 +47,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
   // Generate JWT
   const token = jwt.sign(
     { id: user.id, username: user.username, role: user.role },
-    JWT_SECRET,
+    getJwtSecret(),
     { expiresIn: '24h' }
   );
 

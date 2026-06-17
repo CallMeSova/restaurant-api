@@ -1,11 +1,13 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET;
-
-if (!JWT_SECRET) {
-  throw new Error('JWT_SECRET is missing in environment variables');
-}
+const getJwtSecret = (): string => {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error('JWT_SECRET is missing in environment variables');
+  }
+  return secret;
+};
 
 // ขยาย Type ของ Request เพื่อให้เก็บ user ได้
 declare global {
@@ -29,18 +31,19 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
     const token = authHeader.split(' ')[1];
 
     // Verify token
-    const decoded = jwt.verify(token, JWT_SECRET) as any;
+    const decoded = jwt.verify(token, getJwtSecret()) as any;
 
     // เก็บข้อมูล user ไว้ใน request object เพื่อให้ใช้งานต่อใน controller หรือ middleware ถัดไปได้
     req.user = decoded;
 
     next();
-  } catch (error) {
+  } catch (error: any) {
+    console.error('💥 Authentication middleware error:', error);
     if (error instanceof jwt.JsonWebTokenError) {
       res.status(401).json({ success: false, message: 'Unauthorized: Invalid token' });
       return;
     }
-    res.status(500).json({ success: false, message: 'Internal Server Error during authentication' });
+    res.status(500).json({ success: false, message: error.message || 'Internal Server Error during authentication' });
   }
 };
 
