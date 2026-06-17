@@ -16,7 +16,8 @@ declare global {
   }
 }
 
-export const isAdmin = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+// Middleware ยืนยันตัวตนทั่วไป (JWT Verification)
+export const authenticate = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const authHeader = req.headers.authorization;
 
@@ -30,13 +31,7 @@ export const isAdmin = async (req: Request, res: Response, next: NextFunction): 
     // Verify token
     const decoded = jwt.verify(token, JWT_SECRET) as any;
 
-    // เช็คสิทธิ์ Admin
-    if (decoded.role !== 'admin') {
-      res.status(403).json({ success: false, message: 'Forbidden: Requires admin privileges' });
-      return;
-    }
-
-    // เก็บข้อมูล user ไว้ใน request object เพื่อให้ controller นำไปใช้ต่อได้ (ถ้าต้องการ)
+    // เก็บข้อมูล user ไว้ใน request object เพื่อให้ใช้งานต่อใน controller หรือ middleware ถัดไปได้
     req.user = decoded;
 
     next();
@@ -45,7 +40,32 @@ export const isAdmin = async (req: Request, res: Response, next: NextFunction): 
       res.status(401).json({ success: false, message: 'Unauthorized: Invalid token' });
       return;
     }
-    res.status(500).json({ success: false, message: 'Internal Server Error during authorization' });
+    res.status(500).json({ success: false, message: 'Internal Server Error during authentication' });
   }
 };
+
+// Middleware ตรวจสอบสิทธิ์บทบาทผู้ใช้งาน (Role-Based Access Control)
+export const requireRole = (allowedRoles: string[]) => {
+  return (req: Request, res: Response, next: NextFunction): void => {
+    if (!req.user) {
+      res.status(401).json({ success: false, message: 'Unauthorized: Authentication required' });
+      return;
+    }
+
+    if (!allowedRoles.includes(req.user.role)) {
+      res.status(403).json({ success: false, message: 'Forbidden: Insufficient privileges' });
+      return;
+    }
+
+    next();
+  };
+};
+
+// Legacy isAdmin middleware เพื่อไม่ให้ระบบที่เรียกใช้อยู่เดิมพัง
+export const isAdmin = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  await authenticate(req, res, () => {
+    requireRole(['admin'])(req, res, next);
+  });
+};
+
 

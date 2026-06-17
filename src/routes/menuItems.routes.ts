@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { getMenuItems, getMenuItemById, createMenuItem, updateMenuItem, deleteMenuItem } from '../controllers/menuItems.controller';
-import { isAdmin } from '../middlewares/auth';
+import { authenticate, requireRole } from '../middlewares/auth';
 
 const router = Router();
 
@@ -8,9 +8,10 @@ const router = Router();
 router.get('/', getMenuItems);
 router.get('/:id', getMenuItemById);
 
-// Admin only routes
-router.post('/', isAdmin, createMenuItem);
-router.put('/:id', isAdmin, updateMenuItem);
-router.delete('/:id', isAdmin, deleteMenuItem);
+// Admin/Manager write routes
+router.post('/', authenticate, requireRole(['admin', 'manager']), createMenuItem);
+router.put('/:id', authenticate, requireRole(['admin', 'manager']), updateMenuItem);
+router.delete('/:id', authenticate, requireRole(['admin', 'manager']), deleteMenuItem);
 
 export default router;
+

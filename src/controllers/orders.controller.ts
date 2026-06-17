@@ -113,6 +113,14 @@ export const createOrder = async (req: Request, res: Response): Promise<void> =>
     return;
   }
 
+  // อัปเดตสถานะของโต๊ะอาหารเป็น 'occupied' (มีลูกค้านั่ง)
+  if (table_id) {
+    await supabase
+      .from('tables')
+      .update({ status: 'occupied' })
+      .eq('id', table_id);
+  }
+
   res.status(201).json({ success: true, data });
 };
 

@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import multer from 'multer';
 import { uploadMenuImage } from '../controllers/upload.controller';
-import { isAdmin } from '../middlewares/auth';
+import { authenticate, requireRole } from '../middlewares/auth';
 
 const router = Router();
 
@@ -21,6 +21,7 @@ const upload = multer({
 });
 
 // POST /api/menu-items/:id/image
-router.post('/:id/image', isAdmin, upload.single('image'), uploadMenuImage);
+router.post('/:id/image', authenticate, requireRole(['admin', 'manager']), upload.single('image'), uploadMenuImage);
 
 export default router;
+

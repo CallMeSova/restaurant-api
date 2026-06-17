@@ -1,15 +1,16 @@
 import { Router } from 'express';
 import { getPayments, getPaymentById, createPayment, updatePayment } from '../controllers/payments.controller';
-import { isAdmin } from '../middlewares/auth';
+import { authenticate, requireRole } from '../middlewares/auth';
 
 const router = Router();
 
 // GET /api/payments?status=completed&method=cash
-router.get('/', getPayments);
-router.get('/:id', getPaymentById);
+router.get('/', authenticate, requireRole(['admin', 'manager', 'waiter']), getPayments);
+router.get('/:id', authenticate, requireRole(['admin', 'manager', 'waiter']), getPaymentById);
 
 // Write routes
-router.post('/', createPayment); // Public for cashiers/systems to submit payment
-router.put('/:id', isAdmin, updatePayment);
+router.post('/', authenticate, requireRole(['admin', 'manager', 'waiter']), createPayment); // Restricted to cashiers/waiters/admins
+router.put('/:id', authenticate, requireRole(['admin', 'manager']), updatePayment);
 
 export default router;
+

@@ -1,16 +1,17 @@
 import { Router } from 'express';
 import { getReservations, getReservationById, createReservation, updateReservation, deleteReservation } from '../controllers/reservations.controller';
-import { isAdmin } from '../middlewares/auth';
+import { authenticate, requireRole } from '../middlewares/auth';
 
 const router = Router();
 
 // GET /api/reservations?status=pending
-router.get('/', getReservations);
-router.get('/:id', getReservationById);
+router.get('/', authenticate, requireRole(['admin', 'manager', 'waiter']), getReservations);
+router.get('/:id', authenticate, requireRole(['admin', 'manager', 'waiter']), getReservationById);
 
 // Write routes
-router.post('/', createReservation); // Public for customers/clients
-router.put('/:id', isAdmin, updateReservation);
-router.delete('/:id', isAdmin, deleteReservation);
+router.post('/', createReservation); // Public for customers/clients to reserve
+router.put('/:id', authenticate, requireRole(['admin', 'manager', 'waiter']), updateReservation);
+router.delete('/:id', authenticate, requireRole(['admin', 'manager', 'waiter']), deleteReservation);
 
 export default router;
+

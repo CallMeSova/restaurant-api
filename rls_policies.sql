@@ -38,7 +38,6 @@ ALTER TABLE payments ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "public can read payments"
   ON payments FOR SELECT USING (true);
 
--- users: อ่านได้เฉพาะ field ที่ปลอดภัย (ไม่มี password_hash)
+-- users: อ่านได้ผ่าน Backend เท่านั้น (เปิด RLS แต่ไม่มี Policy สำหรับ SELECT สาธารณะ เพื่อป้องกัน password_hash รั่วไหล)
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "public can read users"
-  ON users FOR SELECT USING (true);
+

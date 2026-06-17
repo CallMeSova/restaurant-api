@@ -71,6 +71,30 @@ export const getPaymentById = async (req: Request, res: Response): Promise<void>
   res.json({ success: true, data });
 };
 
+// Helper function to handle table status release & order completion upon successful payment
+const handlePaymentCompletion = async (orderId: number): Promise<void> => {
+  // 1. Update order status to completed
+  await supabase
+    .from('orders')
+    .update({ status: 'completed' })
+    .eq('id', orderId);
+
+  // 2. Fetch the table_id of this order
+  const { data: order } = await supabase
+    .from('orders')
+    .select('table_id')
+    .eq('id', orderId)
+    .single();
+
+  // 3. Set the table status to 'available'
+  if (order && order.table_id) {
+    await supabase
+      .from('tables')
+      .update({ status: 'available' })
+      .eq('id', order.table_id);
+  }
+};
+
 // POST /api/payments
 export const createPayment = async (req: Request, res: Response): Promise<void> => {
   const { order_id, amount, payment_method, status, paid_at } = req.body;
@@ -95,6 +119,11 @@ export const createPayment = async (req: Request, res: Response): Promise<void> 
   if (error) {
     res.status(500).json({ success: false, message: error.message });
     return;
+  }
+
+  // หากสถานะชำระเงินสำเร็จ ให้เคลียร์โต๊ะและปรับสถานะออเดอร์เป็นเสร็จสิ้น
+  if (data && data.status === 'completed') {
+    await handlePaymentCompletion(order_id);
   }
 
   res.status(201).json({ success: true, data });
@@ -122,5 +151,12 @@ export const updatePayment = async (req: Request, res: Response): Promise<void> 
     return;
   }
 
+  // หากสถานะชำระเงินสำเร็จ ให้เคลียร์โต๊ะและปรับสถานะออเดอร์เป็นเสร็จสิ้น
+  if (data.status === 'completed') {
+    const targetOrderId = order_id || data.order_id;
+    await handlePaymentCompletion(targetOrderId);
+  }
+
   res.json({ success: true, data });
 };
+

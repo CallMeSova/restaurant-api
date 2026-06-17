@@ -81,6 +81,22 @@ export const createReservation = async (req: Request, res: Response): Promise<vo
     return;
   }
 
+  // อัปเดตสถานะของโต๊ะอาหารเป็น 'reserved' หากโต๊ะไม่ได้ถูกนั่งอยู่ (occupied)
+  if (table_id) {
+    const { data: table } = await supabase
+      .from('tables')
+      .select('status')
+      .eq('id', table_id)
+      .single();
+
+    if (table && table.status !== 'occupied') {
+      await supabase
+        .from('tables')
+        .update({ status: 'reserved' })
+        .eq('id', table_id);
+    }
+  }
+
   res.status(201).json({ success: true, data });
 };
 
